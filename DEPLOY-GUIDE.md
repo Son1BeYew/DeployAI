@@ -112,7 +112,7 @@ Mở file `docker-compose.yml` và thêm domain của bạn vào ALLOWED_ORIGINS
 services:
   server:
     environment:
-      - ALLOWED_ORIGINS=https://yourdomain.com,http://yourdomain.com
+      - ALLOWED_ORIGINS=https://enternapic.io.vn/,http://https://enternapic.io.vn/
 ```
 
 ## Bước 3: Deploy với Docker
