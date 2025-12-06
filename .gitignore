@@ -1,8 +1,66 @@
-Server/.env
-Server/vertex-key.json
-Server/config/vertex-key.json
-Server/outputs/
+# Dependencies
+node_modules/
 Server/node_modules/
-Server/vertex-key.json
-node_modules/Server/config/vertex-ai-key.json
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+Server/.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Build outputs
+dist/
+build/
+Server/outputs/*
+!Server/outputs/.gitkeep
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Docker
+.dockerignore
+
+# Certificates
+*.pem
+*.key
+*.crt
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Google Cloud credentials
 Server/config/vertex-ai-key.json
+Server/config/*-key.json
+
+# Coverage
+coverage/
+.nyc_output/
+
+# PM2
+.pm2/

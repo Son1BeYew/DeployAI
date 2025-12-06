@@ -1,455 +1,349 @@
-# AI Studio 🎨
+# AIStudio - AI Image Generation Platform
 
-<div align="center">
-
-![AI Studio Logo](https://img.shields.io/badge/AI%20Studio-v1.0.0-blue?style=for-the-badge)
-![Node.js](https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js)
-![MongoDB](https://img.shields.io/badge/MongoDB-6.0+-green?style=for-the-badge&logo=mongodb)
-![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow?style=for-the-badge&logo=javascript)
-
-</div>
-
-##  Mục Lục
-
-- [ Tổng Quan](#-tổng-quan)
-- [Tính Năng Nổi Bật](#-tính-năng-nổi-bật)
-- [Cấu Trúc Dự Án](#️-cấu-trúc-dự-án)
-- [Công Nghệ Sử Dụng](#️-công-nghệ-sử-dụng)
-- [Cài Đặt và Chạy](#-cài-đặt-và-chạy)
-- [Cấu Hình Môi Trường](#️-cấu-hình-môi-trường)
-- [API Documentation](#-api-documentation)
-- [Testing](#-testing)
-- [Deployment](#-deployment)
-- [Đóng Góp](#-đóng-góp)
-- [License](#-license)
-
-## Tổng Quan
-
-AI Studio là một ứng dụng web generation-based art platform cho phép người dùng:
-
-- Tạo hình ảnh AI chất lượng cao từ text prompts
-- Tùy chỉnh và quản lý style outfit
-- Theo dõi lịch sử tạo hình
-- Mua các gói premium với nhiều tính năng nâng cao
-- Khám phá trending prompts từ cộng đồng
-
-## Tính Năng Nổi Bật
-
-### **AI Image Generation**
-
-- Text-to-image generation với nhiều models AI
-- Tùy chỉnh kích thước, chất lượng ảnh
-- Batch processing cho nhiều ảnh cùng lúc
-- Custom styles và filters
-
-### **Outfit Style Management**
-
-- Upload và quản lý outfit styles
-- Apply styles cho AI-generated images
-- Community-driven style library
-- Style recommendation system
-
-### **Premium Plans**
-
-- **FREE**: 15 ảnh/ngày, chất lượng cơ bản
-- **PRO**: 100 ảnh/ngày, chất lượng cao, 4K
-- **MAX**: Unlimited ảnh, chất lượng 8K, batch processing
-
-### **User Dashboard**
-
-- Thống kê sử dụng chi tiết
-- Lịch sử tạo hình với filter và search
-- Credit và balance management
-- Profile customization
-
-### **Security & Authentication**
-
-- JWT-based authentication
-- Email verification
-- Password encryption
-- Session management
-
-### **Additional Features**
-
-- Trending prompts discovery
-- Community gallery
+Nền tảng tạo ảnh AI với các tính năng:
+- Tạo ảnh từ prompt với AI
+- Thay đổi trang phục và kiểu tóc
+- Thay đổi background
+- Quản lý premium subscription
+- Chatbot hỗ trợ
 - Admin dashboard
-- API rate limiting
-- Responsive design
 
-## Cấu Trúc Dự Án
+## Công nghệ sử dụng
 
-```
-AIStudio/
-├── 📁 Client/                    # Frontend Application
-│   ├── 📁 admin/               # Admin Panel
-│   │   └── 📄 index.html       # Admin Dashboard
-│   ├── 📁 assets/              # Static Assets
-│   │   ├── 📁 components/      # Reusable Components
-│   │   │   ├── 📄 header.html
-│   │   │   ├── 📄 footer.html
-│   │   │   └── 📄 modal.html
-│   │   ├── 📁 css/             # Stylesheets
-│   │   │   ├── 📄 main.css
-│   │   │   ├── 📄 dashboard.css
-│   │   │   └── 📄 premium.css
-│   │   ├── 📁 images/          # Image Assets
-│   │   ├── 📁 js/              # JavaScript Files
-│   │   │   ├── 📄 auth.js
-│   │   │   ├── 📄 api.js
-│   │   │   └── 📄 utils.js
-│   │   └── 📁 video/           # Video Assets
-│   ├── 📄 dashboard.html       # User Dashboard
-│   ├── 📄 tao-anh.html        # AI Image Generation
-│   ├── 📄 history.html         # Generation History
-│   ├── 📄 index.html           # Landing Page
-│   ├── 📄 login.html           # User Login
-│   ├── 📄 pricing.html         # Pricing Plans
-│   ├── 📄 profile.html         # User Profile
-│   ├── 📄 register.html        # User Registration
-│   ├── 📄 studio.html          # Creative Studio
-│   ├── 📄 topup.html           # Payment & Topup
-│   └── 📄 topup-result.html    # Payment Result
-│
-├── 📁 Server/                   # Backend Application
-│   ├── 📁 config/              # Configuration Files
-│   │   ├── 📄 database.js      # Database Configuration
-│   │   ├── 📄 auth.js          # Authentication Config
-│   │   └── 📄 payment.js       # Payment Gateway Config
-│   ├── 📁 controllers/         # Business Logic
-│   │   ├── 📄 aiController.js              # AI Generation Logic
-│   │   ├── 📄 announcementController.js    # System Announcements
-│   │   ├── 📄 authController.js            # User Authentication
-│   │   ├── 📄 historyController.js         # Generation History
-│   │   ├── 📄 outfitStyleController.js     # Style Management
-│   │   ├── 📄 premiumController.js         # Premium Plans
-│   │   ├── 📄 profileController.js         # User Profile
-│   │   ├── 📄 promptController.js          # Prompt Management
-│   │   ├── 📄 promptTrendingController.js  # Trending Prompts
-│   │   └── 📄 topupController.js           # Payment Processing
-│   ├── 📁 models/              # Database Models
-│   │   ├── 📄 User.js          # User Schema
-│   │   ├── 📄 Image.js         # Image Generation Schema
-│   │   ├── 📄 Style.js         # Outfit Style Schema
-│   │   ├── 📄 Prompt.js        # Prompt Schema
-│   │   ├── 📄 Premium.js       # Premium Plan Schema
-│   │   └── 📄 Transaction.js   # Transaction Schema
-│   ├── 📁 middleware/          # Custom Middleware
-│   │   ├── 📄 auth.js          # Authentication Middleware
-│   │   ├── 📄 validation.js    # Input Validation
-│   │   ├── 📄 rateLimit.js     # Rate Limiting
-│   │   └── 📄 errorHandler.js  # Error Handling
-│   ├── 📁 routes/              # API Routes
-│   │   ├── 📄 auth.js          # Auth Routes
-│   │   ├── 📄 ai.js            # AI Generation Routes
-│   │   ├── 📄 user.js          # User Management Routes
-│   │   ├── 📄 premium.js       # Premium Plan Routes
-│   │   └── 📄 payment.js       # Payment Routes
-│   ├── 📁 scripts/             # Utility Scripts
-│   │   ├── 📄 seedDatabase.js  # Database Seeding
-│   │   ├── 📄 backup.js        # Data Backup
-│   │   └── 📄 cleanup.js       # Data Cleanup
-│   ├── 📁 outputs/             # AI Generation Outputs
-│   ├── 📁 uploads/             # User Uploads
-│   ├── 📁 logs/                # Application Logs
-│   ├── 📄 .env                 # Environment Variables
-│   ├── 📄 .env.example         # Environment Template
-│   ├── 📄 package.json         # Project Dependencies
-│   ├── 📄 package-lock.json    # Dependency Lock File
-│   └── 📄 server.js            # Application Entry Point
-│
-├── 📁 .git/                    # Git Repository
-├── 📄 .gitignore              # Git Ignore Rules
-├── 📄 .hintrc                 # HTML Validator Config
-├── 📄 package.json             # Root Package Configuration
-└── 📄 README.md               # Project Documentation
-```
+### Backend
+- Node.js + Express
+- MongoDB + Mongoose
+- JWT Authentication
+- Passport (Google OAuth)
+- Cloudinary (Image storage)
+- Replicate AI, Stability AI, Gemini AI
+- MoMo Payment Gateway
+- Swagger API Documentation
 
-##  Công Nghệ Sử Dụng
+### Frontend
+- HTML5, CSS3, JavaScript
+- Bootstrap 5
+- Chart.js
+- Font Awesome
 
-### Frontend Technologies
+### DevOps
+- Docker & Docker Compose
+- Nginx
+- PM2 (optional)
 
-- **HTML5** - Semantic Markup
-- **CSS3** - Modern Styling with Flexbox/Grid
-- **JavaScript (ES6+)** - Modern JavaScript Features
-- **Responsive Design** - Mobile-First Approach
+## Cài đặt
 
-### Backend Technologies
-
-- **Node.js** - JavaScript Runtime Environment
-- **Express.js** - Web Application Framework
-- **MongoDB** - NoSQL Database
-- **Mongoose** - MongoDB Object Modeling
-- **JWT** - JSON Web Tokens for Authentication
-
-### External Services
-
-- **AI Providers** - Multiple AI Generation APIs
-- **Payment Gateways** - MoMo, VNPay Integration
-- **Email Service** - Email Verification & Notifications
-- **Cloud Storage** - File Storage Solution
-
-##  Cài Đặt và Chạy
-
-### Prerequisites
-
-- Node.js 18.0 hoặc cao hơn
-- MongoDB 6.0 hoặc cao hơn
-- Git
-
-### 1. Clone Repository
-
+### 1. Clone repository
 ```bash
-git clone https://github.com/Son1BeYew/AIStudio.git
+git clone <repository-url>
 cd AIStudio
 ```
 
-### 2. Backend Setup
+### 2. Cấu hình môi trường
+```bash
+# Copy file .env mẫu
+cp .env.example Server/.env
 
+# Chỉnh sửa file .env với thông tin của bạn
+nano Server/.env
+```
+
+### 3. Cài đặt dependencies (Development)
 ```bash
 cd Server
 npm install
+cd ..
 ```
 
-### 3. Environment Configuration
-
+### 4. Chạy với Docker (Production)
 ```bash
-cp .env.example .env
-# Chỉnh sửa .env với thông tin của bạn
+# Build và start containers
+docker-compose up -d --build
+
+# Xem logs
+docker-compose logs -f
+
+# Hoặc sử dụng script deploy
+chmod +x deploy.sh
+./deploy.sh
 ```
 
-### 4. Database Setup
-
+### 5. Chạy local (Development)
 ```bash
-# Start MongoDB service
-sudo systemctl start mongod
-
-# Seed database (optional)
-npm run seed
-```
-
-### 5. Start Development Server
-
-```bash
-# Development mode
+# Terminal 1 - Backend
+cd Server
 npm run dev
 
-# Production mode
-npm start
+# Terminal 2 - Frontend (sử dụng live-server hoặc http-server)
+cd Client
+npx http-server -p 8080
 ```
 
-### 6. Frontend Setup
+## Cấu trúc dự án
 
-```bash
-# Mở Localhost:5000 trong terminal
-# Hoặc sử dụng Live Server extension trong VS Code
+```
+AIStudio/
+├── Client/                 # Frontend files
+│   ├── admin/             # Admin dashboard
+│   ├── assets/            # CSS, JS, images
+│   │   ├── css/
+│   │   ├── js/
+│   │   └── components/
+│   ├── *.html             # HTML pages
+│   └── Dockerfile
+├── Server/                # Backend API
+│   ├── config/           # Configuration files
+│   ├── controllers/      # Route controllers
+│   ├── middleware/       # Custom middleware
+│   ├── models/           # MongoDB models
+│   ├── routes/           # API routes
+│   ├── services/         # Business logic
+│   ├── outputs/          # Generated images
+│   ├── server.js         # Entry point
+│   ├── package.json
+│   └── Dockerfile
+├── docker-compose.yml    # Docker compose config
+├── nginx.conf           # Nginx configuration
+├── deploy.sh            # Deployment script
+├── .env.example         # Environment variables template
+└── README.md
 ```
 
-## ⚙️ Cấu Hình Môi Trường
+## API Endpoints
 
-### Environment Variables (.env)
+### Authentication
+- `POST /auth/register` - Đăng ký tài khoản
+- `POST /auth/login` - Đăng nhập
+- `GET /auth/google` - Đăng nhập Google
+- `POST /auth/refresh-token` - Refresh token
 
-```env
-# Server Configuration
-PORT=5000
-NODE_ENV=development
-
-# Database
-MONGODB_URI=...
-
-# JWT Secret
-JWT_SECRET=....
-
-# AI Services
-AI_PROVIDER_API_KEY=your-ai-api-key
-AI_PROVIDER_URL=https://api.ai-provider.com
-
-# Payment Gateway
-MOMO_PARTNER_CODE=YOUR_PARTNER_CODE
-MOMO_ACCESS_KEY=YOUR_ACCESS_KEY
-MOMO_SECRET_KEY=YOUR_SECRET_KEY
-
-# Email Service
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-password
-
-# File Upload
-UPLOAD_PATH=./uploads
-MAX_FILE_SIZE=10485760
-
-# Rate Limiting
-RATE_LIMIT_WINDOW=15
-RATE_LIMIT_MAX_REQUESTS=100
-```
-
-## 📚 API Documentation
-
-### Authentication Endpoints
-
-```javascript
-POST / api / auth / register; // User Registration
-POST / api / auth / login; // User Login
-POST / api / auth / logout; // User Logout
-GET / api / auth / verify; // Email Verification
-POST / api / auth / forgot; // Forgot Password
-POST / api / auth / reset; // Reset Password
-```
-
-### AI Generation Endpoints
-
-```javascript
-POST / api / ai / generate; // Generate Image
-GET / api / ai / history; // Generation History
-GET / api / ai / styles; // Available Styles
-POST / api / ai / style - upload; // Upload Style
-```
+### AI Generation
+- `POST /api/ai/generate` - Tạo ảnh từ prompt
+- `POST /api/ai/generate-outfit` - Thay đổi trang phục
+- `POST /api/ai/generate-background` - Thay đổi background
+- `GET /api/ai/daily-quota` - Kiểm tra quota
 
 ### User Management
+- `GET /api/profile` - Lấy thông tin profile
+- `PUT /api/profile` - Cập nhật profile
+- `GET /api/history` - Lịch sử tạo ảnh
 
-```javascript
-GET / api / user / profile; // Get User Profile
-PUT / api / user / profile; // Update Profile
-GET / api / user / stats; // User Statistics
-```
+### Premium
+- `GET /api/premium/plans` - Danh sách gói premium
+- `POST /api/premium/purchase` - Mua gói premium
+- `GET /api/premium/current` - Gói premium hiện tại
+- `POST /api/premium/cancel` - Hủy premium
 
-### Premium Plans
+### Admin
+- `GET /api/admin/dashboard-stats` - Thống kê dashboard
+- `GET /api/admin/users` - Danh sách users
+- `GET /api/admin/top-prompts` - Top prompts
+- `GET /api/admin/wallet-stats` - Thống kê ví
 
-```javascript
-GET / api / premium / plans; // Available Plans
-POST / api / premium / purchase; // Purchase Plan
-GET / api / premium / current; // Current Plan Status
-```
+### Prompts
+- `GET /api/prompts` - Danh sách prompts
+- `GET /api/prompts/:id` - Chi tiết prompt
+- `POST /api/prompts` - Tạo prompt mới (admin)
+- `PUT /api/prompts/:id` - Cập nhật prompt (admin)
 
-### Payment Processing
+### Other
+- `GET /api/announcements` - Thông báo
+- `GET /api/outfit-styles` - Danh sách outfit styles
+- `POST /api/chat` - Chatbot
+- `GET /api/trends/stats` - Thống kê trends
+- `GET /api/health` - Health check
 
-```javascript
-POST / api / topup / initiate; // Initiate Payment
-POST / api / topup / callback; // Payment Callback
-GET / api / topup / history; // Payment History
-```
+## API Documentation
 
-## 🧪 Testing
+Sau khi chạy server, truy cập Swagger UI tại:
+- Local: http://localhost:5000/api-docs
+- Production: https://yourdomain.com/api-docs
 
-### Run Tests
+## Deployment
 
-```bash
-# Run all tests
-npm test
+Xem hướng dẫn chi tiết tại [README-DEPLOY.md](./README-DEPLOY.md)
 
-# Run specific test suite
-npm run test:unit
-npm run test:integration
-npm run test:e2e
-
-# Test coverage
-npm run test:coverage
-```
-
-### Test Structure
-
-
-
-## 🚀 Deployment
-
-### Production Deployment
-
-#### 1. Build for Production
+### Quick Deploy với Docker
 
 ```bash
-npm run build
+# 1. Cấu hình .env
+cp .env.example Server/.env
+nano Server/.env
+
+# 2. Deploy
+docker-compose up -d --build
+
+# 3. Kiểm tra
+docker-compose ps
+docker-compose logs -f
+curl http://localhost:5000/api/health
 ```
 
-#### 2. Environment Setup
+### Deploy với SSL
 
 ```bash
-# Set production environment
-export NODE_ENV=production
+# Cài đặt certbot
+sudo apt-get install certbot python3-certbot-nginx
 
-# Update production .env
-cp .env.production .env
-```
-
-#### 3. Start Production Server
-
-```bash
-# Using PM2 (recommended)
-npm install -g pm2
-pm2 start server.js --name "ai-studio"
-pm2 startup
-pm2 save
-
-# Or directly
-npm start
-```
-
-#### 4. SSL Certificate (Optional)
-
-```bash
-# Using Let's Encrypt
+# Lấy SSL certificate
 sudo certbot --nginx -d yourdomain.com
+
+# Restart nginx
+docker-compose restart client
 ```
 
-### Docker Deployment
+## Quản lý
 
+### Xem logs
 ```bash
-# Build Docker image
-docker build -t ai-studio .
-
-# Run container
-docker run -p 5000:5000 --env-file .env ai-studio
+docker-compose logs -f
+docker-compose logs -f server
+docker-compose logs -f client
 ```
 
-### Cloud Deployment
+### Restart services
+```bash
+docker-compose restart
+docker-compose restart server
+docker-compose restart client
+```
 
-- **AWS EC2** with Elastic Beanstalk
-- **Google Cloud Platform** with App Engine
-- **Microsoft Azure** with App Service
-- **DigitalOcean** with App Platform
+### Update code
+```bash
+git pull origin main
+docker-compose up -d --build
+```
 
-## 🤝 Đóng Góp
+### Backup
+```bash
+# Backup outputs
+docker run --rm -v aistudio_outputs:/data -v $(pwd):/backup alpine tar czf /backup/outputs-backup.tar.gz /data
 
-Chúng tôi chào đừng mọi đóng góp! Vui lòng đọc [CONTRIBUTING.md](CONTRIBUTING.md) để biết thêm chi tiết.
+# Backup MongoDB (nếu dùng local)
+docker exec aistudio_server mongodump --uri="$MONGO_URI" --out=/backup
+```
 
-### Development Workflow
+## Environment Variables
+
+Các biến môi trường quan trọng:
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `NODE_ENV` | Environment (production/development) | Yes |
+| `MONGO_URI` | MongoDB connection string | Yes |
+| `JWT_SECRET` | JWT secret key | Yes |
+| `FRONTEND_URL` | Frontend URL | Yes |
+| `BACKEND_URL` | Backend API URL | Yes |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | Yes |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Secret | Yes |
+| `CLOUDINARY_*` | Cloudinary credentials | Yes |
+| `REPLICATE_API_TOKEN` | Replicate AI token | Yes |
+| `GEMINI_API_KEY` | Google Gemini API key | Yes |
+| `MOMO_*` | MoMo payment credentials | Optional |
+| `EMAIL_*` | Email service credentials | Optional |
+
+## Troubleshooting
+
+### Port đã được sử dụng
+```bash
+# Kiểm tra port
+sudo netstat -tulpn | grep :5000
+sudo netstat -tulpn | grep :80
+
+# Kill process
+sudo kill -9 <PID>
+```
+
+### MongoDB connection failed
+- Kiểm tra MONGO_URI trong .env
+- Kiểm tra IP whitelist trên MongoDB Atlas
+- Kiểm tra network connectivity
+
+### Docker issues
+```bash
+# Clean up
+docker-compose down
+docker system prune -a
+
+# Rebuild
+docker-compose up -d --build
+```
+
+### API không hoạt động
+```bash
+# Test health endpoint
+curl http://localhost:5000/api/health
+
+# Kiểm tra logs
+docker-compose logs -f server
+```
+
+## Development
+
+### Chạy tests
+```bash
+cd Server
+npm test
+```
+
+### Seed data
+```bash
+cd Server
+npm run seed:outfits
+npm run seed:trends
+```
+
+### Code style
+- ESLint configuration
+- Prettier formatting
+- Follow Node.js best practices
+
+## Security
+
+- JWT authentication
+- Password hashing với bcrypt
+- CORS configuration
+- Rate limiting
+- Input validation
+- SQL injection prevention
+- XSS protection
+
+## Performance
+
+- Image optimization với Cloudinary
+- CDN for static assets
+- Database indexing
+- Caching strategies
+- Load balancing ready
+
+## Contributing
 
 1. Fork repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Create Pull Request
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
 
-### Code Style
+## License
 
-- Sử dụng ES6+ features
-- Follow Airbnb JavaScript Style Guide
-- Add comments cho complex logic
-- Write unit tests cho new features
+This project is proprietary and confidential.
 
-## 📄 License
+## Support
 
-Dự án này được cấp phép theo [MIT License](LICENSE) - xem file LICENSE để biết chi tiết.
+- Email: support@yourdomain.com
+- Documentation: https://docs.yourdomain.com
+- Issues: https://github.com/yourrepo/issues
 
-##  Lời Cảm Ơn
+## Credits
 
-- **[AI Provider]** - Cung cấp AI generation services
-- **[MoMo]** - Payment gateway integration
-- **[MongoDB]** - Database solution
-- **[Express.js]** - Web framework
+Developed by [Your Team Name]
 
-##  Liên Hệ
+## Changelog
 
-- **Email**: contact@aistudio.com
-- **Website**: https://aistudio.com
-- **GitHub**: https://github.com/username/ai-studio
-
----
-
-<div align="center">
-
-**Made with ❤️ by AI Studio Team**
-
-[⬆ Back to top](#ai-studio-)
-
-</div>
+### Version 1.0.0 (2024-12-06)
+- Initial release
+- AI image generation
+- User authentication
+- Premium subscriptions
+- Admin dashboard
+- Payment integration

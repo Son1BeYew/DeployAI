@@ -1,5 +1,6 @@
 (function () {
-  const API_BASE_URL = "http://localhost:5000/api/chat";
+  // Use relative path for production, works with nginx proxy
+  const API_BASE_URL = "/api/chat";
   const WELCOME_TEMPLATE = `
       <div class="welcome-message">
         <div class="welcome-icon">

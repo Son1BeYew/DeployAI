@@ -26,6 +26,7 @@ const contentManagementRoutes = require("./routes/contentManagement");
 const debugContentRoutes = require("./routes/debugContent");
 const shareRoutes = require("./routes/share");
 const sessionRoutes = require("./routes/sessionRoutes");
+const serviceConfigRoutes = require("./routes/serviceConfig");
 const app = express();
 
 // CORS configuration
@@ -82,7 +83,18 @@ app.use("/api/admin/content-management", contentManagementRoutes);
 app.use("/api/debug/content", debugContentRoutes);
 app.use("/share", shareRoutes);
 app.use("/api/sessions", sessionRoutes);
+app.use("/api/service-config", serviceConfigRoutes);
 app.use("/outputs", express.static(path.join(__dirname, "outputs")));
+
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ 
+    status: "ok", 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || "development"
+  });
+});
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../Client/index.html"));
