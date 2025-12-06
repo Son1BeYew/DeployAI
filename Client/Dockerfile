@@ -1,9 +1,6 @@
 FROM nginx:alpine
 
-# Copy nginx configuration
-COPY ../nginx.conf /etc/nginx/conf.d/default.conf
-
-# Copy client files
+# Copy client files first
 COPY . /usr/share/nginx/html
 
 # Create admin directory if not exists
