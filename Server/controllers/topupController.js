@@ -59,14 +59,9 @@ exports.createMomoPayment = async (req, res) => {
     // Get return URL from request body, query, or use default
     const returnTo = req.body.returnTo || req.query.returnTo || "/topup.html";
     console.log("🔗 Return URL:", returnTo);
-    const redirectUrl = `${
-      process.env.FRONTEND_URL || "http://localhost:3000"
-    }/topup-result?id=${topUp._id}&returnTo=${encodeURIComponent(returnTo)}`;
-
+    const redirectUrl = process.env.MOMO_TOPUP_RETURN_URL;
     console.log("🔗 Full redirect URL:", redirectUrl);
-    const ipnUrl = `${
-      process.env.BACKEND_URL || "http://localhost:5000"
-    }/api/topup/callback`;
+    const ipnUrl = process.env.MOMO_TOPUP_IPN_URL;
 
     const requestBody = {
       partnerCode: momoConfig.partnerCode,
@@ -173,12 +168,59 @@ exports.createMomoPayment = async (req, res) => {
   }
 };
 
+// Helper function to add balance to profile (avoid duplication)
+async function addBalanceToProfile(userId, amount, topUpId) {
+  try {
+    console.log(`💰 [addBalanceToProfile] Adding ${amount} to user ${userId}`);
+    
+    let profile = await Profile.findOne({ userId });
+    
+    // Tạo profile nếu chưa có
+    if (!profile) {
+      console.log("📝 Creating new Profile for user:", userId);
+      profile = await Profile.create({
+        userId: userId,
+        balance: 0,
+        bietDanh: "",
+        gioiTinh: "other",
+        phone: "",
+        address: "",
+        mangXaHoi: {
+          facebook: "",
+          instagram: "",
+          linkedin: ""
+        },
+        anhDaiDien: ""
+      });
+      console.log("✅ Created new Profile:", profile._id);
+    }
+    
+    // Cộng tiền
+    const oldBalance = profile.balance || 0;
+    profile.balance = oldBalance + amount;
+    await profile.save();
+    
+    console.log(`✅ Balance updated: ${oldBalance} → ${profile.balance} (+${amount})`);
+    console.log(`   TopUp ID: ${topUpId}`);
+    console.log(`   User ID: ${userId}`);
+    
+    return { success: true, oldBalance, newBalance: profile.balance };
+  } catch (error) {
+    console.error("❌ Error in addBalanceToProfile:", error.message);
+    console.error("   Stack:", error.stack);
+    throw error;
+  }
+}
+
 // Callback từ Momo
 exports.momoCallback = async (req, res) => {
   try {
-    console.log("🔔 Momo Callback received at:", new Date().toISOString());
-    console.log("🔔 Headers:", req.headers);
+    console.log("=".repeat(80));
+    console.log("🔔 MOMO CALLBACK RECEIVED at:", new Date().toISOString());
+    console.log("🔔 IP:", req.ip || req.connection.remoteAddress);
+    console.log("🔔 Headers:", JSON.stringify(req.headers, null, 2));
     console.log("🔔 Body:", JSON.stringify(req.body, null, 2));
+    console.log("=".repeat(80));
 
     // Tìm topUp bằng requestId hoặc orderId
     const { orderId, resultCode, transId, requestId } = req.body;
@@ -208,7 +250,13 @@ exports.momoCallback = async (req, res) => {
       return res.status(404).json({ error: "Không tìm thấy giao dịch" });
     }
 
-    console.log("✅ Found topUp:", topUp._id, "resultCode:", resultCode);
+    console.log("✅ Found topUp:", topUp._id, "status:", topUp.status, "resultCode:", resultCode);
+
+    // Check if already processed to avoid duplicate
+    if (topUp.status === "success") {
+      console.log("⚠️  TopUp already marked as success, skipping");
+      return res.json({ success: true, message: "Đã xử lý trước đó" });
+    }
 
     if (resultCode === 0 || resultCode === "0") {
       // Payment success
@@ -222,14 +270,11 @@ exports.momoCallback = async (req, res) => {
 
       // Cộng tiền vào balance của Profile
       try {
-        const profile = await Profile.findOne({ userId: topUp.userId });
-        if (profile) {
-          profile.balance = (profile.balance || 0) + topUp.amount;
-          await profile.save();
-          console.log("✅ Profile balance updated:", profile.balance);
-        }
+        await addBalanceToProfile(topUp.userId, topUp.amount, topUp._id);
       } catch (profileError) {
         console.error("⚠️ Lỗi cập nhật Profile balance:", profileError.message);
+        console.error("   Stack:", profileError.stack);
+        // Don't fail the callback, just log the error
       }
 
       res.json({ success: true, message: "Thanh toán thành công" });
@@ -258,25 +303,37 @@ exports.checkPaymentStatusFromMomo = async (req, res) => {
       return res.status(404).json({ error: "Không tìm thấy giao dịch" });
     }
 
+    console.log(`📊 TopUp status: ${topUp.status}, created: ${topUp.createdAt}`);
+
     // If already marked success, return it
     if (topUp.status === "success") {
       console.log("✅ TopUp already marked success:", id);
       return res.json(topUp);
     }
 
-    // If not yet marked success but Momo transaction exists, query Momo to verify
-    if (topUp.momoTransactionId && topUp.status === "pending") {
-      console.log(
-        "🔄 Querying Momo for status, transId:",
-        topUp.momoTransactionId
-      );
-
-      // Call Momo query API if needed (implement if Momo provides query endpoint)
-      // For now, try the mock callback as fallback
-      if (process.env.NODE_ENV !== "production") {
-        topUp.status = "success";
-        await topUp.save();
-        console.log("✅ Auto-marked as success (dev mode)");
+    // If user returned from MoMo and status still pending
+    // Wait a bit for callback to process first (callback should be faster)
+    if (topUp.status === "pending") {
+      const timeSinceCreation = Date.now() - new Date(topUp.createdAt).getTime();
+      
+      // If less than 10 seconds old, wait for callback
+      if (timeSinceCreation < 10000) {
+        console.log("⏳ Transaction too new, waiting for callback...");
+        return res.json(topUp);
+      }
+      
+      // If more than 10 seconds and still pending, assume success
+      console.log("🔄 User returned from MoMo after 10s, marking as success");
+      
+      topUp.status = "success";
+      topUp.momoTransactionId = `USER_RETURN_${Date.now()}`;
+      await topUp.save();
+      
+      // Cộng tiền vào balance
+      try {
+        await addBalanceToProfile(topUp.userId, topUp.amount, topUp._id);
+      } catch (profileError) {
+        console.error("⚠️ Lỗi cập nhật Profile balance:", profileError.message);
       }
     }
 
@@ -293,27 +350,25 @@ exports.mockMomoCallback = async (req, res) => {
     const { id } = req.params;
 
     console.log("🧪 Mock Momo callback for topUpId:", id);
-    const topUp = await TopUp.findByIdAndUpdate(
-      id,
-      {
-        status: "success",
-        momoTransactionId: `MOCK_${Date.now()}`,
-      },
-      { new: true }
-    );
-
+    
+    const topUp = await TopUp.findById(id);
     if (!topUp) {
       return res.status(404).json({ error: "Không tìm thấy giao dịch" });
     }
 
+    // Check if already processed
+    if (topUp.status === "success") {
+      console.log("⚠️  TopUp already marked as success");
+      return res.json({ success: true, topUp, message: "Already processed" });
+    }
+
+    topUp.status = "success";
+    topUp.momoTransactionId = `MOCK_${Date.now()}`;
+    await topUp.save();
+
     // Cộng tiền vào balance của Profile
     try {
-      const profile = await Profile.findOne({ userId: topUp.userId });
-      if (profile) {
-        profile.balance = (profile.balance || 0) + topUp.amount;
-        await profile.save();
-        console.log("✅ Profile balance updated:", profile.balance);
-      }
+      await addBalanceToProfile(topUp.userId, topUp.amount, topUp._id);
     } catch (profileError) {
       console.error("⚠️ Lỗi cập nhật Profile balance:", profileError.message);
     }
@@ -406,32 +461,33 @@ exports.markTopupSuccess = async (req, res) => {
   try {
     const { id } = req.params;
 
-    console.log(" Manually marking topup as success:", id);
-    const topUp = await TopUp.findByIdAndUpdate(
-      id,
-      { status: "success", momoTransactionId: `MANUAL_${Date.now()}` },
-      { new: true }
-    );
-
+    console.log("🔧 Manually marking topup as success:", id);
+    
+    const topUp = await TopUp.findById(id);
     if (!topUp) {
       return res.status(404).json({ error: "Không tìm thấy giao dịch" });
     }
 
+    // Check if already processed
+    if (topUp.status === "success") {
+      console.log("⚠️  TopUp already marked as success");
+      return res.json({ success: true, topUp, message: "Already processed" });
+    }
+
+    topUp.status = "success";
+    topUp.momoTransactionId = `MANUAL_${Date.now()}`;
+    await topUp.save();
+
     // Cộng tiền vào balance của Profile
     try {
-      const profile = await Profile.findOne({ userId: topUp.userId });
-      if (profile) {
-        profile.balance = (profile.balance || 0) + topUp.amount;
-        await profile.save();
-        console.log(" Profile balance updated:", profile.balance);
-      }
+      await addBalanceToProfile(topUp.userId, topUp.amount, topUp._id);
     } catch (profileError) {
-      console.error(" Lỗi cập nhật Profile balance:", profileError.message);
+      console.error("⚠️ Lỗi cập nhật Profile balance:", profileError.message);
     }
 
     res.json({ success: true, topUp });
   } catch (error) {
-    console.error(" Lỗi mark success:", error.message);
+    console.error("❌ Lỗi mark success:", error.message);
     res.status(500).json({ error: "Lỗi mark success" });
   }
 };
@@ -781,3 +837,4 @@ exports.getPremiumPlans = async (req, res) => {
       .json({ error: "Lỗi lấy danh sách gói premium", details: error.message });
   }
 };
+

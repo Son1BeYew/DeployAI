@@ -49,7 +49,7 @@ connectDB();
 require("./config/passport")(passport);
 app.use(passport.initialize());
 
-// Swagger API Documentation - MUST be before static files
+// Swagger API Documentation
 app.use(
   "/api-docs",
   swaggerUi.serve,
@@ -58,11 +58,6 @@ app.use(
     customSiteTitle: "EternaPicSHT API Documentation",
   })
 );
-
-// Static files - AFTER api-docs route
-app.use(express.static(path.join(__dirname, "../Client")));
-
-app.use("/admin", express.static(path.join(__dirname, "../Client/admin")));
 
 app.use("/auth", authRoutes);
 app.use("/protected", protectedRoutes);
@@ -96,8 +91,14 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Root endpoint - API only
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../Client/index.html"));
+  res.json({ 
+    message: "EternaPic API Server",
+    version: "1.0.0",
+    docs: "/api-docs",
+    health: "/api/health"
+  });
 });
 
 // Debug route for testing content management
@@ -126,17 +127,12 @@ app.get("/api/admin/content-management/debug-check", async (req, res) => {
   }
 });
 
-app.get("*", (req, res) => {
-  // Don't interfere with API routes
-  if (req.path.startsWith("/api/")) {
-    return res.status(404).json({ error: "API endpoint not found" });
-  }
-
-  if (req.path.startsWith("/admin")) {
-    return res.sendFile(path.join(__dirname, "../Client/admin/index.html"));
-  }
-
-  res.sendFile(path.join(__dirname, "../Client/index.html"));
+// 404 handler for API routes
+app.use((req, res, next) => {
+  res.status(404).json({
+    error: "API endpoint not found",
+    path: req.originalUrl,
+  });
 });
 
 const PORT = process.env.PORT || 5000;
@@ -144,3 +140,4 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
