@@ -197,7 +197,7 @@
   <script>
     const resultContainer = document.getElementById("result-content");
     let checkCount = 0;
-    const maxChecks = 30; // Check for 30 seconds max
+    const maxChecks = 10; // Check for 10 seconds max (reduced from 30)
 
     async function checkPaymentStatus() {
       try {
@@ -228,7 +228,7 @@
           setTimeout(checkPaymentStatus, 1000); // Check every 1 second
         } else {
           // After max checks, auto-finalize (user returned from MoMo, so payment likely completed)
-          console.log("⏰ Timeout reached, auto-finalizing payment");
+          console.log("⏰ Timeout reached after 10s, auto-finalizing payment");
           finalizePayment(topupId);
         }
       } catch (error) {

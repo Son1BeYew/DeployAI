@@ -376,4 +376,91 @@ router.put("/mark-success/:id", markTopupSuccess);
  */
 router.put("/cancel/:id", checkAuth, markTopupCancelled);
 
+/**
+ * @swagger
+ * /api/topup/fix-balance:
+ *   post:
+ *     summary: Fix user balance by recalculating from successful topups
+ *     tags: [TopUp]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Balance fixed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 oldBalance:
+ *                   type: number
+ *                 newBalance:
+ *                   type: number
+ *                 totalTopups:
+ *                   type: number
+ *       401:
+ *         description: Unauthorized
+ */
+router.post("/fix-balance", checkAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    const mongoose = require("mongoose");
+    const TopUp = require("../models/TopUp");
+    const Profile = require("../models/Profile");
+
+    console.log("🔧 Fixing balance for user:", userId);
+
+    // Calculate correct balance from successful topups
+    const result = await TopUp.aggregate([
+      { 
+        $match: { 
+          userId: mongoose.Types.ObjectId(userId), 
+          status: "success" 
+        } 
+      },
+      { 
+        $group: { 
+          _id: null, 
+          totalBalance: { $sum: "$amount" },
+          count: { $sum: 1 }
+        } 
+      },
+    ]);
+
+    const correctBalance = result.length > 0 ? result[0].totalBalance : 0;
+    const topupCount = result.length > 0 ? result[0].count : 0;
+
+    console.log(`📊 Calculated balance: ${correctBalance} from ${topupCount} topups`);
+
+    // Get or create profile
+    let profile = await Profile.findOne({ userId });
+    const oldBalance = profile ? profile.balance : 0;
+
+    if (!profile) {
+      profile = await Profile.create({
+        userId: userId,
+        balance: correctBalance,
+      });
+      console.log("✅ Created new Profile with balance:", correctBalance);
+    } else {
+      profile.balance = correctBalance;
+      await profile.save();
+      console.log(`✅ Updated balance: ${oldBalance} → ${correctBalance}`);
+    }
+
+    res.json({
+      success: true,
+      oldBalance,
+      newBalance: correctBalance,
+      totalTopups: topupCount,
+      difference: correctBalance - oldBalance,
+    });
+  } catch (error) {
+    console.error("❌ Error fixing balance:", error);
+    res.status(500).json({ error: "Lỗi khi fix balance" });
+  }
+});
+
 module.exports = router;
