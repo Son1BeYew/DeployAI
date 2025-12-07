@@ -21,9 +21,9 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 # 1. Kiểm tra Docker
-echo "📦 Kiểm tra Docker..."
+echo "Kiểm tra Docker..."
 if ! command -v docker &> /dev/null; then
-    echo -e "${RED}❌ Docker chưa được cài đặt!${NC}"
+    echo -e "${RED}Docker chưa được cài đặt!${NC}"
     echo "Vui lòng cài đặt Docker: https://docs.docker.com/get-docker/"
     exit 1
 fi
@@ -64,7 +64,7 @@ echo -e "${GREEN}✓ Cấu hình hợp lệ${NC}"
 echo ""
 
 # 3. Backup (nếu có container đang chạy)
-echo "💾 Backup dữ liệu..."
+echo "Backup dữ liệu..."
 if docker ps -a | grep -q aistudio_server; then
     timestamp=$(date +%Y%m%d_%H%M%S)
     backup_dir="backups/${timestamp}"
@@ -84,14 +84,14 @@ fi
 echo ""
 
 # 4. Stop containers cũ
-echo "⏹️  Dừng containers cũ..."
+echo "Dừng containers cũ..."
 docker-compose down 2>/dev/null || true
 echo -e "${GREEN}✓ Đã dừng containers cũ${NC}"
 echo ""
 
 # 5. Pull latest code (nếu là git repo)
 if [ -d ".git" ]; then
-    echo "📥 Cập nhật code..."
+    echo " Cập nhật code..."
     git pull origin main || git pull origin master || echo "Không thể pull code"
     echo ""
 fi
@@ -101,16 +101,16 @@ echo "🔨 Build Docker images..."
 docker-compose build --no-cache
 
 echo ""
-echo "▶️  Khởi động containers..."
+echo " Khởi động containers..."
 docker-compose up -d
 
 echo ""
-echo "⏳ Đợi services khởi động..."
+echo " Đợi services khởi động..."
 sleep 10
 
 # 7. Kiểm tra health
 echo ""
-echo "🏥 Kiểm tra health..."
+echo "Kiểm tra health..."
 max_attempts=30
 attempt=0
 
@@ -126,7 +126,7 @@ while [ $attempt -lt $max_attempts ]; do
 done
 
 if [ $attempt -eq $max_attempts ]; then
-    echo -e "${RED}❌ Server không phản hồi sau 60 giây${NC}"
+    echo -e "${RED} Server không phản hồi sau 60 giây${NC}"
     echo "Kiểm tra logs: docker-compose logs server"
     exit 1
 fi
@@ -134,21 +134,21 @@ fi
 echo ""
 
 # 8. Verify deployment
-echo "🔍 Xác minh deployment..."
+echo "Xác minh deployment..."
 echo ""
 
 # Check containers
-echo "📊 Container status:"
+echo " Container status:"
 docker-compose ps
 echo ""
 
 # Check logs
-echo "📋 Server logs (10 dòng cuối):"
+echo " Server logs (10 dòng cuối):"
 docker-compose logs --tail=10 server
 echo ""
 
 # Test endpoints
-echo "🧪 Test endpoints:"
+echo " Test endpoints:"
 endpoints=(
     "http://localhost:5000/api/health"
     "http://localhost:5000/api/prompts"
@@ -165,7 +165,7 @@ done
 
 echo ""
 echo "================================"
-echo -e "${GREEN}✅ Deploy hoàn tất!${NC}"
+echo -e "${GREEN} Deploy hoàn tất!${NC}"
 echo ""
 echo "📍 Truy cập ứng dụng:"
 echo "   Frontend: http://localhost"

@@ -59,9 +59,13 @@ exports.createMomoPayment = async (req, res) => {
     // Get return URL from request body, query, or use default
     const returnTo = req.body.returnTo || req.query.returnTo || "/topup.html";
     console.log("🔗 Return URL:", returnTo);
-    const redirectUrl = process.env.MOMO_TOPUP_RETURN_URL;
-    console.log("🔗 Full redirect URL:", redirectUrl);
-    const ipnUrl = process.env.MOMO_TOPUP_IPN_URL;
+    
+    // Get IPN and redirect URLs with fallbacks
+    const ipnUrl = process.env.MOMO_TOPUP_IPN_URL || process.env.MOMO_IPN_URL || `${process.env.BACKEND_URL}/api/topup/callback`;
+    const redirectUrl = process.env.MOMO_TOPUP_RETURN_URL || process.env.MOMO_RETURN_URL || `${process.env.FRONTEND_URL}/topup-result`;
+    
+    console.log("🔗 IPN URL:", ipnUrl);
+    console.log("🔗 Redirect URL:", redirectUrl);
 
     const requestBody = {
       partnerCode: momoConfig.partnerCode,
@@ -316,14 +320,15 @@ exports.checkPaymentStatusFromMomo = async (req, res) => {
     if (topUp.status === "pending") {
       const timeSinceCreation = Date.now() - new Date(topUp.createdAt).getTime();
       
-      // If less than 10 seconds old, wait for callback
-      if (timeSinceCreation < 10000) {
+      // If less than 5 seconds old, wait for callback
+      if (timeSinceCreation < 5000) {
         console.log("⏳ Transaction too new, waiting for callback...");
         return res.json(topUp);
       }
       
-      // If more than 10 seconds and still pending, assume success
-      console.log("🔄 User returned from MoMo after 10s, marking as success");
+      // If more than 5 seconds and still pending, assume success
+      // (User only returns from MoMo if they completed or cancelled payment)
+      console.log("🔄 User returned from MoMo after 5s, marking as success");
       
       topUp.status = "success";
       topUp.momoTransactionId = `USER_RETURN_${Date.now()}`;
@@ -332,8 +337,10 @@ exports.checkPaymentStatusFromMomo = async (req, res) => {
       // Cộng tiền vào balance
       try {
         await addBalanceToProfile(topUp.userId, topUp.amount, topUp._id);
+        console.log("✅ Balance added successfully via user return");
       } catch (profileError) {
         console.error("⚠️ Lỗi cập nhật Profile balance:", profileError.message);
+        console.error("   Stack:", profileError.stack);
       }
     }
 

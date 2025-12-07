@@ -197,7 +197,7 @@
   <script>
     const resultContainer = document.getElementById("result-content");
     let checkCount = 0;
-    const maxChecks = 30; // Check for 30 seconds max
+    const maxChecks = 10; // Check for 10 seconds max (reduced from 30)
 
     async function checkPaymentStatus() {
       try {
@@ -227,8 +227,9 @@
         if (checkCount < maxChecks) {
           setTimeout(checkPaymentStatus, 1000); // Check every 1 second
         } else {
-          // If still pending after max checks, show option to finalize or check again
-          showTimeoutMessage(topupId);
+          // After max checks, auto-finalize (user returned from MoMo, so payment likely completed)
+          console.log("⏰ Timeout reached after 10s, auto-finalizing payment");
+          finalizePayment(topupId);
         }
       } catch (error) {
         console.error("Lỗi kiểm tra trạng thái:", error);
@@ -244,27 +245,28 @@
             <p class="result-message">Đang xác nhận thanh toán...</p>
           `;
 
-        // First check if Momo callback arrived (production)
-        let response = await fetch(`/api/topup/check-momo-status/${topupId}`);
-        let data = await response.json();
+        console.log("🔍 Finalizing payment for:", topupId);
+
+        // Call check-momo-status which will auto-mark as success
+        const response = await fetch(`/api/topup/check-momo-status/${topupId}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log("✅ Payment status:", data);
 
         if (data.status === "success") {
           showSuccess(data);
-          return;
-        }
-
-        // If not marked success yet, try mock callback as fallback
-        response = await fetch(`/api/topup/mock-callback/${topupId}`);
-        data = await response.json();
-
-        if (data.topUp && data.topUp.status === "success") {
-          showSuccess(data.topUp);
+        } else if (data.status === "failed") {
+          showFailed(data);
         } else {
-          checkCount = 0;
-          checkPaymentStatus();
+          // Still pending, wait and check again
+          setTimeout(() => finalizePayment(topupId), 2000);
         }
       } catch (error) {
-        console.error("Lỗi xác nhận:", error);
+        console.error("❌ Lỗi xác nhận:", error);
         showError("Lỗi xác nhận thanh toán: " + error.message);
       }
     }

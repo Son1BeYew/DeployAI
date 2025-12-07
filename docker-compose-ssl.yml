@@ -13,6 +13,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5000
+      - ALLOWED_ORIGINS=https://enternapic.io.vn,http://enternapic.io.vn,http://103.7.215.231,http://localhost
     volumes:
       - ./Server/outputs:/app/outputs
       - ./Server/config:/app/config

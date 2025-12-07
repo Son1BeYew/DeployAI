@@ -377,6 +377,4 @@ echo -e "${YELLOW}⚠️  Lưu ý:${NC}"
 echo "   - Certificate sẽ tự động renew mỗi 90 ngày"
 echo "   - Backup files: nginx.conf.backup, docker-compose.yml.backup"
 echo "   - Nếu có lỗi, restore bằng: cp *.backup và docker-compose restart"
-echo ""
-
-
+echo " 

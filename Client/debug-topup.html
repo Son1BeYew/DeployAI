@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Topup - AIStudio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .section h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.secondary:hover {
+            background: #545b62;
+        }
+
+        button.success {
+            background: #28a745;
+        }
+
+        button.success:hover {
+            background: #218838;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .result pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box p {
+            margin: 5px 0;
+            color: #004085;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Debug Topup Payment</h1>
+        <p class="subtitle">Tool để test và debug hệ thống thanh toán</p>
+
+        <div class="info-box">
+            <p><strong>📋 Hướng dẫn:</strong></p>
+            <p>1. Đăng nhập và lấy token từ localStorage</p>
+            <p>2. Nhập token vào ô bên dưới</p>
+            <p>3. Sử dụng các chức năng để test</p>
+        </div>
+
+        <!-- Token Section -->
+        <div class="section">
+            <h2>🔑 Authentication</h2>
+            <div class="input-group">
+                <label>JWT Token:</label>
+                <input type="text" id="token" placeholder="Nhập token hoặc click 'Load from localStorage'">
+            </div>
+            <button onclick="loadTokenFromStorage()">Load from localStorage</button>
+            <button class="secondary" onclick="clearToken()">Clear</button>
+        </div>
+
+        <!-- Check Balance -->
+        <div class="section">
+            <h2>💰 Check Balance</h2>
+            <button onclick="checkBalance()">Get Balance</button>
+            <button class="secondary" onclick="getAccountSummary()">Get Account Summary</button>
+            <button class="success" onclick="fixBalance()">Fix Balance</button>
+            <div class="result" id="balanceResult"></div>
+        </div>
+
+        <!-- Test Topup -->
+        <div class="section">
+            <h2>🧪 Test Topup</h2>
+            <div class="input-group">
+                <label>TopUp ID:</label>
+                <input type="text" id="topupId" placeholder="Nhập TopUp ID">
+            </div>
+            <button onclick="checkStatus()">Check Status</button>
+            <button class="secondary" onclick="mockCallback()">Mock Callback</button>
+            <button class="success" onclick="markSuccess()">Mark Success</button>
+            <div class="result" id="topupResult"></div>
+        </div>
+
+        <!-- History -->
+        <div class="section">
+            <h2>📜 History</h2>
+            <button onclick="getHistory()">Get Topup History</button>
+            <div class="result" id="historyResult"></div>
+        </div>
+
+        <!-- Create Test Topup -->
+        <div class="section">
+            <h2>➕ Create Test Topup</h2>
+            <div class="input-group">
+                <label>Amount (VNĐ):</label>
+                <input type="number" id="amount" value="10000" step="1000">
+            </div>
+            <button onclick="createTopup()">Create Topup</button>
+            <div class="result" id="createResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+
+        function loadTokenFromStorage() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                document.getElementById('token').value = token;
+                showResult('balanceResult', '✅ Token loaded from localStorage');
+            } else {
+                showResult('balanceResult', '❌ No token found in localStorage');
+            }
+        }
+
+        function clearToken() {
+            document.getElementById('token').value = '';
+            showResult('balanceResult', '🗑️ Token cleared');
+        }
+
+        function getToken() {
+            return document.getElementById('token').value;
+        }
+
+        function showResult(elementId, data) {
+            const element = document.getElementById(elementId);
+            if (typeof data === 'object') {
+                element.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } else {
+                element.innerHTML = '<pre>' + data + '</pre>';
+            }
+        }
+
+        async function checkBalance() {
+            const token = getToken();
+            if (!token) {
+                showResult('balanceResult', '❌ Please enter token first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/topup/balance`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                showResult('balanceResult', data);
+            } catch (error) {
+                showResult('balanceResult', '❌ Error: ' + error.message);
+            }
+        }
+
+        async function getAccountSummary() {
+            const token = getToken();
+            if (!token) {
+                showResult('balanceResult', '❌ Please enter token first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/topup/account-summary`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                showResult('balanceResult', data);
+            } catch (error) {
+                showResult('balanceResult', '❌ Error: ' + error.message);
+            }
+        }
+
+        async function fixBalance() {
+            const token = getToken();
+            if (!token) {
+                showResult('balanceResult', '❌ Please enter token first');
+                return;
+            }
+
+            if (!confirm('Fix balance by recalculating from successful topups?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/topup/fix-balance`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                showResult('balanceResult', data);
+            } catch (error) {
+                showResult('balanceResult', '❌ Error: ' + error.message);
+            }
+        }
+
+        async function checkStatus() {
+            const topupId = document.getElementById('topupId').value;
+            if (!topupId) {
+                showResult('topupResult', '❌ Please enter TopUp ID');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/topup/status/${topupId}`);
+                const data = await response.json();
+                showResult('topupResult', data);
+            } catch (error) {
+                showResult('topupResult', '❌ Error: ' + error.message);
+            }
+        }
+
+        async function mockCallback() {
+            const topupId = document.getElementById('topupId').value;
+            if (!topupId) {
+                showResult('topupResult', '❌ Please enter TopUp ID');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/topup/mock-callback/${topupId}`);
+                const data = await response.json();
+                showResult('topupResult', data);
+            } catch (error) {
+                showResult('topupResult', '❌ Error: ' + error.message);
+            }
+        }
+
+        async function markSuccess() {
+            const topupId = document.getElementById('topupId').value;
+            if (!topupId) {
+                showResult('topupResult', '❌ Please enter TopUp ID');
+                return;
+            }
+
+            if (!confirm('Mark this topup as success?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/topup/mark-success/${topupId}`, {
+                    method: 'PUT'
+                });
+                const data = await response.json();
+                showResult('topupResult', data);
+            } catch (error) {
+                showResult('topupResult', '❌ Error: ' + error.message);
+            }
+        }
+
+        async function getHistory() {
+            const token = getToken();
+            if (!token) {
+                showResult('historyResult', '❌ Please enter token first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/topup/history`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                showResult('historyResult', data);
+            } catch (error) {
+                showResult('historyResult', '❌ Error: ' + error.message);
+            }
+        }
+
+        async function createTopup() {
+            const token = getToken();
+            if (!token) {
+                showResult('createResult', '❌ Please enter token first');
+                return;
+            }
+
+            const amount = parseInt(document.getElementById('amount').value);
+            if (!amount || amount < 1000) {
+                showResult('createResult', '❌ Amount must be at least 1000 VNĐ');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/topup/create-momo`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ amount })
+                });
+                const data = await response.json();
+                
+                if (data.orderId) {
+                    document.getElementById('topupId').value = data.orderId;
+                }
+                
+                showResult('createResult', data);
+            } catch (error) {
+                showResult('createResult', '❌ Error: ' + error.message);
+            }
+        }
+
+        // Auto-load token on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadTokenFromStorage();
+        });
+    </script>
+</body>
+</html>
