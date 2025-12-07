@@ -62,7 +62,8 @@ exports.createMomoPayment = async (req, res) => {
     
     // Get IPN and redirect URLs with fallbacks
     const ipnUrl = process.env.MOMO_TOPUP_IPN_URL || process.env.MOMO_IPN_URL || `${process.env.BACKEND_URL}/api/topup/callback`;
-    const redirectUrl = process.env.MOMO_TOPUP_RETURN_URL || process.env.MOMO_RETURN_URL || `${process.env.FRONTEND_URL}/topup-result`;
+    // Redirect to topup.html with transaction ID for auto-check
+    const redirectUrl = `${process.env.FRONTEND_URL}/topup.html?payment=success&id=${topUp._id}`;
     
     console.log("🔗 IPN URL:", ipnUrl);
     console.log("🔗 Redirect URL:", redirectUrl);
@@ -106,9 +107,7 @@ exports.createMomoPayment = async (req, res) => {
         success: true,
         payUrl: `${
           process.env.FRONTEND_URL || "http://localhost:3000"
-        }/topup-result?id=${topUp._id}&returnTo=${encodeURIComponent(
-          returnTo
-        )}`,
+        }/topup.html?payment=success&id=${topUp._id}`,
         orderId: topUp._id,
         message: "🧪 Mock Momo link created (development mode)",
       };
@@ -320,15 +319,15 @@ exports.checkPaymentStatusFromMomo = async (req, res) => {
     if (topUp.status === "pending") {
       const timeSinceCreation = Date.now() - new Date(topUp.createdAt).getTime();
       
-      // If less than 5 seconds old, wait for callback
-      if (timeSinceCreation < 5000) {
+      // If less than 3 seconds old, wait for callback
+      if (timeSinceCreation < 3000) {
         console.log("⏳ Transaction too new, waiting for callback...");
         return res.json(topUp);
       }
       
-      // If more than 5 seconds and still pending, assume success
-      // (User only returns from MoMo if they completed or cancelled payment)
-      console.log("🔄 User returned from MoMo after 5s, marking as success");
+      // If more than 3 seconds and still pending, assume success
+      // (User only returns from MoMo if they completed payment)
+      console.log("🔄 User returned from MoMo after 3s, marking as success");
       
       topUp.status = "success";
       topUp.momoTransactionId = `USER_RETURN_${Date.now()}`;
@@ -336,8 +335,8 @@ exports.checkPaymentStatusFromMomo = async (req, res) => {
       
       // Cộng tiền vào balance
       try {
-        await addBalanceToProfile(topUp.userId, topUp.amount, topUp._id);
-        console.log("✅ Balance added successfully via user return");
+        const result = await addBalanceToProfile(topUp.userId, topUp.amount, topUp._id);
+        console.log("✅ Balance added successfully via user return:", result);
       } catch (profileError) {
         console.error("⚠️ Lỗi cập nhật Profile balance:", profileError.message);
         console.error("   Stack:", profileError.stack);

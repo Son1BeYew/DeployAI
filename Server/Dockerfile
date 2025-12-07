@@ -8,16 +8,14 @@ ENV NODE_ENV=production
 ENV PORT=5000
 
 # Copy only package files first (cache optimization)
-COPY package*.json ./
-
+COPY Server/package*.json ./
 # Install deps without dev
-RUN npm ci --only=production && npm cache clean --force
-
+RUN npm install --omit=dev && npm cache clean --force
 # Create required directories before copying code
 RUN mkdir -p outputs
 
 # Copy source code
-COPY . .
+COPY Server ./
 
 # Expose port
 EXPOSE 5000
