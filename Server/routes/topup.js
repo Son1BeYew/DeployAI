@@ -98,6 +98,16 @@ router.post("/create-momo", checkAuth, createMomoPayment);
  *         description: Callback processed
  */
 router.post("/callback", momoCallback);
+
+// Test endpoint to verify callback is accessible
+router.get("/callback", (req, res) => {
+  console.log("🧪 GET request to callback endpoint");
+  res.json({ 
+    message: "Callback endpoint is accessible",
+    method: "POST required",
+    timestamp: new Date().toISOString()
+  });
+});
 /**
  * @swagger
  * /api/topup/mock-callback/{id}:

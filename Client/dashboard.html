@@ -11,6 +11,7 @@
     <div id="header"></div>
     <main id="user-info" class="dashboard-content"></main>
     <div id="footer"></div>
+    <script src="/assets/js/config.js"></script>
     <script src="/assets/js/slider.js"></script>
     <script src="/assets/js/floating-chat-loader.js"></script>
     <script src="/assets/js/announcements.js"></script>
@@ -23,7 +24,7 @@
         window.location.href = "/login.html";
       } else {
         localStorage.setItem("token", token);
-        fetch("/protected", {
+        fetch(API_CONFIG.endpoint("/protected"), {
           headers: { Authorization: "Bearer " + token },
         })
           .then((res) => res.json())

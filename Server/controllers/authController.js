@@ -382,9 +382,8 @@ exports.googleCallback = async (req, res) => {
   await createSession(req.user._id, req, tokenId, 7);
 
   const role = (req.user?.role || "user").toLowerCase();
-  const baseUrl = process.env.CLIENT_BASE_URL || "http://localhost:5000";
-  const targetPath =
-    role === "admin" ? "/admin/index.html" : "/Client/dashboard.html";
+  const baseUrl = process.env.FRONTEND_URL || "http://localhost";
+  const targetPath = role === "admin" ? "/admin/index.html" : "/dashboard.html";
   const redirectUrl = new URL(targetPath, baseUrl);
   redirectUrl.searchParams.set("token", accessToken);
   redirectUrl.searchParams.set("refreshToken", refreshToken);

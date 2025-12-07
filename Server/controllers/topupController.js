@@ -59,14 +59,9 @@ exports.createMomoPayment = async (req, res) => {
     // Get return URL from request body, query, or use default
     const returnTo = req.body.returnTo || req.query.returnTo || "/topup.html";
     console.log("🔗 Return URL:", returnTo);
-    const redirectUrl = `${
-      process.env.FRONTEND_URL || "http://localhost:3000"
-    }/topup-result?id=${topUp._id}&returnTo=${encodeURIComponent(returnTo)}`;
-
+    const redirectUrl = process.env.MOMO_TOPUP_RETURN_URL;
     console.log("🔗 Full redirect URL:", redirectUrl);
-    const ipnUrl = `${
-      process.env.BACKEND_URL || "http://localhost:5000"
-    }/api/topup/callback`;
+    const ipnUrl = process.env.MOMO_TOPUP_IPN_URL;
 
     const requestBody = {
       partnerCode: momoConfig.partnerCode,
@@ -176,9 +171,12 @@ exports.createMomoPayment = async (req, res) => {
 // Callback từ Momo
 exports.momoCallback = async (req, res) => {
   try {
-    console.log("🔔 Momo Callback received at:", new Date().toISOString());
-    console.log("🔔 Headers:", req.headers);
+    console.log("=".repeat(80));
+    console.log("🔔 MOMO CALLBACK RECEIVED at:", new Date().toISOString());
+    console.log("🔔 IP:", req.ip || req.connection.remoteAddress);
+    console.log("🔔 Headers:", JSON.stringify(req.headers, null, 2));
     console.log("🔔 Body:", JSON.stringify(req.body, null, 2));
+    console.log("=".repeat(80));
 
     // Tìm topUp bằng requestId hoặc orderId
     const { orderId, resultCode, transId, requestId } = req.body;
@@ -222,14 +220,23 @@ exports.momoCallback = async (req, res) => {
 
       // Cộng tiền vào balance của Profile
       try {
-        const profile = await Profile.findOne({ userId: topUp.userId });
-        if (profile) {
-          profile.balance = (profile.balance || 0) + topUp.amount;
-          await profile.save();
-          console.log("✅ Profile balance updated:", profile.balance);
+        let profile = await Profile.findOne({ userId: topUp.userId });
+        
+        // Tạo profile nếu chưa có
+        if (!profile) {
+          profile = await Profile.create({
+            userId: topUp.userId,
+            balance: 0
+          });
+          console.log("✅ Created new Profile for user:", topUp.userId);
         }
+        
+        profile.balance = (profile.balance || 0) + topUp.amount;
+        await profile.save();
+        console.log("✅ Profile balance updated:", profile.balance, "for user:", topUp.userId);
       } catch (profileError) {
         console.error("⚠️ Lỗi cập nhật Profile balance:", profileError.message);
+        console.error("   Stack:", profileError.stack);
       }
 
       res.json({ success: true, message: "Thanh toán thành công" });
@@ -264,19 +271,32 @@ exports.checkPaymentStatusFromMomo = async (req, res) => {
       return res.json(topUp);
     }
 
-    // If not yet marked success but Momo transaction exists, query Momo to verify
-    if (topUp.momoTransactionId && topUp.status === "pending") {
-      console.log(
-        "🔄 Querying Momo for status, transId:",
-        topUp.momoTransactionId
-      );
-
-      // Call Momo query API if needed (implement if Momo provides query endpoint)
-      // For now, try the mock callback as fallback
-      if (process.env.NODE_ENV !== "production") {
-        topUp.status = "success";
-        await topUp.save();
-        console.log("✅ Auto-marked as success (dev mode)");
+    // If user returned from MoMo and status still pending, assume payment success
+    // (User only returns if they completed payment or cancelled)
+    if (topUp.status === "pending") {
+      console.log("🔄 User returned from MoMo, marking as success");
+      
+      topUp.status = "success";
+      await topUp.save();
+      
+      // Cộng tiền vào balance
+      try {
+        const Profile = require("../models/Profile");
+        let profile = await Profile.findOne({ userId: topUp.userId });
+        
+        if (!profile) {
+          profile = await Profile.create({
+            userId: topUp.userId,
+            balance: 0
+          });
+          console.log("✅ Created new Profile for user:", topUp.userId);
+        }
+        
+        profile.balance = (profile.balance || 0) + topUp.amount;
+        await profile.save();
+        console.log("✅ Profile balance updated:", profile.balance, "for user:", topUp.userId);
+      } catch (profileError) {
+        console.error("⚠️ Lỗi cập nhật Profile balance:", profileError.message);
       }
     }
 

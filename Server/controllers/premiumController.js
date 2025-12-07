@@ -211,11 +211,8 @@ exports.purchasePremium = async (req, res) => {
       amount: planConfig.price,
       orderId: orderId,
       orderInfo: orderInfo,
-      redirectUrl:
-        process.env.MOMO_RETURN_URL || "https://your-domain.com/topup.html",
-      ipnUrl:
-        process.env.MOMO_IPN_URL ||
-        "https://your-domain.com/api/premium/momo-callback",
+      redirectUrl: process.env.MOMO_PREMIUM_RETURN_URL,
+      ipnUrl: process.env.MOMO_PREMIUM_IPN_URL,
       extraData: extraData,
       requestType: "captureWallet",
       signature: signature,
