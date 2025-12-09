@@ -34,7 +34,6 @@ function initScrollAnimations() {
 
 document.addEventListener("DOMContentLoaded", () => {
   const componentCSS = {
-    header: "/assets/css/header.css",
     hero: "/assets/css/hero.css",
     features: "/assets/css/features.css",
     footer: "/assets/css/footer.css",
@@ -91,7 +90,7 @@ function checkAuth() {
 
   localStorage.setItem("token", token);
 
-  fetch(API_CONFIG.endpoint("/protected"), {
+  fetch("/protected", {
     headers: { Authorization: "Bearer " + token },
   })
     .then((res) => {
@@ -341,7 +340,7 @@ async function redirectToGenImage() {
 
   // Kiểm tra token với server
   try {
-    const res = await fetch(API_CONFIG.endpoint("/protected"), {
+    const res = await fetch("/protected", {
       headers: { Authorization: "Bearer " + token },
     });
     if (!res.ok) throw new Error("Token không hợp lệ");
